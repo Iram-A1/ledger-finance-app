@@ -2040,7 +2040,7 @@ function SettingsTab({
         <div style={{ fontSize: 13, color: T.inkSoft, marginBottom: 14 }}>
           Sign out of your Ledger account on this device.
         </div>
-        <Btn variant="outline" onClick={onLogout}>
+        <Btn variant="outline" onClick={() => supabase.auth.signOut()}>
           Log out
         </Btn>
       </Card>
