@@ -1986,7 +1986,15 @@ function ImportPreviewModal({ preview, accounts, categories, onCancel, onConfirm
 /* ---------------------------------------------------------------------- */
 /* Settings tab                                                            */
 /* ---------------------------------------------------------------------- */
-function SettingsTab({ currency, setCurrency, categories, onAddCategory, onUpdateCategory, accounts }) {
+function SettingsTab({
+  currency,
+  setCurrency,
+  categories,
+  onAddCategory,
+  onUpdateCategory,
+  accounts,
+  onLogout
+}) {
   const [newCat, setNewCat] = useState("");
   const iconKeys = Object.keys(CATEGORY_ICONS);
 
@@ -2023,6 +2031,18 @@ function SettingsTab({ currency, setCurrency, categories, onAddCategory, onUpdat
       <Card style={{ padding: 18, marginBottom: 14 }}>
         <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 8 }}>Accounts &amp; data</div>
         <div style={{ fontSize: 13, color: T.inkSoft }}>{accounts.length} active account{accounts.length === 1 ? "" : "s"}. Manage them from the Accounts tab. Export and backups are in Reports.</div>
+      </Card>
+
+      <Card style={{ padding: 18, marginBottom: 14 }}>
+        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>
+          Account
+        </div>
+        <div style={{ fontSize: 13, color: T.inkSoft, marginBottom: 14 }}>
+          Sign out of your Ledger account on this device.
+        </div>
+        <Btn variant="outline" onClick={onLogout}>
+          Log out
+        </Btn>
       </Card>
 
       <Card style={{ padding: 18 }}>
