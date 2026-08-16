@@ -1,22 +1,10 @@
 import { supabase } from "./supabase";
 
-const STORAGE_KEY = "finance-app:data";
+const STORAGE_KEY_PREFIX = "finance-app:data";
 
-/*
- * This helper keeps localStorage as the safety copy.
- *
- * LOAD:
- * 1. Read local data first.
- * 2. Try Supabase.
- * 3. If cloud has real data, use cloud.
- * 4. If cloud is empty but local has data, migrate local to cloud.
- * 5. If Supabase fails, keep using local data.
- *
- * SAVE:
- * 1. Save locally first.
- * 2. Then try Supabase.
- * 3. If cloud save fails, the local copy still survives.
- */
+function getUserStorageKey(userId) {
+  return `${STORAGE_KEY_PREFIX}:${userId}`;
+}
 
 function mergeWithDefaults(defaultData, savedData) {
   return {
@@ -46,9 +34,9 @@ function hasMeaningfulData(data) {
   );
 }
 
-function loadLocal(defaultData) {
+function loadLocal(storageKey, defaultData) {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(storageKey);
 
     if (!raw) {
       return defaultData;
@@ -63,10 +51,10 @@ function loadLocal(defaultData) {
   }
 }
 
-function saveLocal(data) {
+function saveLocal(storageKey, data) {
   try {
     window.localStorage.setItem(
-      STORAGE_KEY,
+      storageKey,
       JSON.stringify(data)
     );
 
@@ -106,6 +94,7 @@ async function readCloud(userId, defaultData) {
 
     if (error) {
       console.error("Cloud Ledger load failed:", error);
+
       return {
         success: false,
         data: null
@@ -164,54 +153,39 @@ async function writeCloud(userId, data) {
 }
 
 export async function loadLedgerData(defaultData) {
-  /*
-   * IMPORTANT:
-   * Local data is read BEFORE contacting Supabase.
-   * This is the safety mechanism that prevents
-   * a cloud failure from making the Ledger look empty.
-   */
-
-  const localData = loadLocal(defaultData);
-
   const user = await getAuthenticatedUser();
 
   if (!user) {
-    return localData;
+    return defaultData;
   }
+
+  const storageKey = getUserStorageKey(user.id);
+
+  const localData = loadLocal(
+    storageKey,
+    defaultData
+  );
 
   const cloudResult = await readCloud(
     user.id,
     defaultData
   );
 
-  /*
-   * Supabase could not be reached or rejected
-   * the request. Keep using the local copy.
-   */
   if (!cloudResult.success) {
     return localData;
   }
 
   const cloudData = cloudResult.data;
 
-  /*
-   * If cloud already contains meaningful Ledger data,
-   * cloud becomes the source of truth.
-   *
-   * Also refresh the local safety copy.
-   */
   if (hasMeaningfulData(cloudData)) {
-    saveLocal(cloudData);
+    saveLocal(
+      storageKey,
+      cloudData
+    );
+
     return cloudData;
   }
 
-  /*
-   * Cloud is empty, but this browser already has
-   * Ledger information.
-   *
-   * Migrate the local data to Supabase instead
-   * of replacing it with an empty cloud record.
-   */
   if (hasMeaningfulData(localData)) {
     const migrated = await writeCloud(
       user.id,
@@ -220,36 +194,34 @@ export async function loadLedgerData(defaultData) {
 
     if (migrated) {
       console.log(
-        "Existing local Ledger data migrated to Supabase."
+        "User-scoped local Ledger data migrated to Supabase."
       );
     }
 
     return localData;
   }
 
-  /*
-   * Both cloud and local are empty.
-   */
-  return cloudData || localData;
+  return defaultData;
 }
 
 export async function saveLedgerData(data) {
-  /*
-   * LOCAL FIRST.
-   *
-   * Even if Supabase is unavailable,
-   * this browser keeps the latest Ledger data.
-   */
-  saveLocal(data);
-
   const user = await getAuthenticatedUser();
 
   if (!user) {
     return {
-      localSaved: true,
+      localSaved: false,
       cloudSaved: false
     };
   }
+
+  const storageKey = getUserStorageKey(
+    user.id
+  );
+
+  const localSaved = saveLocal(
+    storageKey,
+    data
+  );
 
   const cloudSaved = await writeCloud(
     user.id,
@@ -257,7 +229,7 @@ export async function saveLedgerData(data) {
   );
 
   return {
-    localSaved: true,
+    localSaved,
     cloudSaved
   };
 }
