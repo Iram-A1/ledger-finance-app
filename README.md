@@ -277,19 +277,19 @@ The repository is connected to Vercel for production deployment.
 -   [x] PWA configuration
 -   [x] 192 × 192 Ledger icon
 -   [x] 512 × 512 Ledger icon
--   [ ] Final installed-icon verification
--   [ ] Final PWA/offline testing
+-   [x] Final installed-icon verification
+-   [x] Final PWA/offline testing
 
 ### Quality pass
 
--   [ ] Full transaction calculation testing
--   [ ] Credit-card regression testing
--   [ ] Transfer and savings regression testing
--   [ ] Edit/delete regression testing
--   [ ] Export/restore regression testing
--   [ ] Error-handling review
--   [ ] Final mobile UX polish
--   [ ] Final security review
+-   [x] Full transaction calculation testing
+-   [x] Credit-card regression testing
+-   [x] Transfer and savings regression testing
+-   [x] Edit/delete regression testing
+-   [x] Export/restore regression testing
+-   [x] Error-handling review
+-   [x] Final mobile UX polish
+-   [x] Final security review
 
 ------------------------------------------------------------------------
 
