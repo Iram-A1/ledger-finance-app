@@ -1,5 +1,4 @@
-::: {align="center"}
-`<img src="public/icon-512.png" width="110" alt="Ledger logo">`
+
 
 # Ledger
 
@@ -351,7 +350,7 @@ Important balances should always be verified against official financial-institut
 
 ------------------------------------------------------------------------
 
-::: {align="center"}
+:::
 ### Ledger
 
 **Know what you have. Understand where it goes.**
