@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import AuthScreen from "./AuthScreen";
 import { supabase } from "./supabase";
+import { loadLedgerData, saveLedgerData } from "./ledgerStorage";
 import {
   Wallet, PiggyBank, CreditCard, TrendingDown, TrendingUp, Plus, X, Search,
   Home, Receipt, PieChart as PieIcon, Landmark, StickyNote, FileBarChart, Settings as SettingsIcon,
@@ -102,52 +103,12 @@ const emptyData = () => ({
   budgets: {}, // { [categoryId]: monthlyAmount }
   recurringRules: [], // { id, name, type, amount, fromAccountId, toAccountId, category, frequency, nextDate, active, description, note, merchant }
 });
-
 async function loadData() {
-  try {
-    if (hasClaudeStorage) {
-      const res = await window.storage.get(STORAGE_KEY, false);
-
-      if (res && res.value) {
-        return {
-          ...emptyData(),
-          ...JSON.parse(res.value)
-        };
-      }
-    } else {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-
-      if (raw) {
-        return {
-          ...emptyData(),
-          ...JSON.parse(raw)
-        };
-      }
-    }
-  } catch (e) {
-    /* key not found or storage unavailable */
-  }
-
-  return emptyData();
+  return loadLedgerData(emptyData());
 }
 
 async function saveData(data) {
-  try {
-    if (hasClaudeStorage) {
-      await window.storage.set(
-        STORAGE_KEY,
-        JSON.stringify(data),
-        false
-      );
-    } else {
-      window.localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(data)
-      );
-    }
-  } catch (e) {
-    console.error("save failed", e);
-  }
+  return saveLedgerData(data);
 }
 /* ---------------------------------------------------------------------- */
 /* Balance / spending calculations                                         */
