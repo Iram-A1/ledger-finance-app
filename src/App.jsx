@@ -105,70 +105,48 @@ const emptyData = () => ({
 
 async function loadData() {
   try {
-    const {
-      data: { user },
-      error: userError
-    } = await supabase.auth.getUser();
+    if (hasClaudeStorage) {
+      const res = await window.storage.get(STORAGE_KEY, false);
 
-    if (userError || !user) {
-      console.error("No authenticated user:", userError);
-      return emptyData();
+      if (res && res.value) {
+        return {
+          ...emptyData(),
+          ...JSON.parse(res.value)
+        };
+      }
+    } else {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+
+      if (raw) {
+        return {
+          ...emptyData(),
+          ...JSON.parse(raw)
+        };
+      }
     }
-
-    const { data: row, error } = await supabase
-      .from("user_finance_data")
-      .select("data")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (error) {
-      console.error("Cloud load failed:", error);
-      return emptyData();
-    }
-
-    if (!row?.data) {
-      return emptyData();
-    }
-
-    return {
-      ...emptyData(),
-      ...row.data
-    };
-  } catch (error) {
-    console.error("Cloud load failed:", error);
-    return emptyData();
+  } catch (e) {
+    /* key not found or storage unavailable */
   }
+
+  return emptyData();
 }
+
 async function saveData(data) {
   try {
-    const {
-      data: { user },
-      error: userError
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      console.error("No authenticated user. Data was not saved.");
-      return;
-    }
-
-    const { error } = await supabase
-      .from("user_finance_data")
-      .upsert(
-        {
-          user_id: user.id,
-          data: data,
-          updated_at: new Date().toISOString()
-        },
-        {
-          onConflict: "user_id"
-        }
+    if (hasClaudeStorage) {
+      await window.storage.set(
+        STORAGE_KEY,
+        JSON.stringify(data),
+        false
       );
-
-    if (error) {
-      console.error("Cloud save failed:", error);
+    } else {
+      window.localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(data)
+      );
     }
-  } catch (error) {
-    console.error("Cloud save failed:", error);
+  } catch (e) {
+    console.error("save failed", e);
   }
 }
 /* ---------------------------------------------------------------------- */
